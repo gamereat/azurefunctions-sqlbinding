@@ -1,4 +1,5 @@
-﻿using Microsoft.Azure.WebJobs.Description;
+﻿using System;
+using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Config;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -6,12 +7,20 @@ using System.Dynamic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AzureFunctions.SqlBinding
 {
 	[Extension(nameof(SqlServerBinding))]
 	public class SqlServerBinding : IExtensionConfigProvider
 	{
+		private ISqlBindingTokenProvider tokenProvider;
+
+		public SqlServerBinding(IServiceProvider services)
+		{
+			tokenProvider = services.GetService<ISqlBindingTokenProvider>();
+		}
+
 		public void Initialize(ExtensionConfigContext context)
 		{
 			var rule = context.AddBindingRule<SqlServerAttribute>();
@@ -27,7 +36,12 @@ namespace AzureFunctions.SqlBinding
 			var collection = new List<SqlServerModel>();
 			using (var connection = new SqlConnection(attribute.ConnectionString))
 			{
+				if (tokenProvider != null)
+				{
+					connection.AccessToken = await tokenProvider.GetToken();
+				}
 				connection.Open();
+				
 				using (var command = connection.CreateCommand())
 				{
 					command.Connection = connection;
@@ -57,6 +71,10 @@ namespace AzureFunctions.SqlBinding
 		{
 			using (var connection = new SqlConnection(attribute.ConnectionString))
 			{
+				if (tokenProvider != null)
+				{
+					connection.AccessToken = await tokenProvider.GetToken();
+				}
 				connection.Open();
 				using (var command = connection.CreateCommand())
 				{
