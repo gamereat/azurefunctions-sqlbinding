@@ -38,7 +38,7 @@ namespace AzureFunctions.SqlBinding
 			{
 				if (tokenProvider != null)
 				{
-					connection.AccessToken = await tokenProvider.GetToken();
+					connection.AccessToken = await tokenProvider.GetToken(cancellationToken);
 				}
 				await connection.OpenAsync(cancellationToken);
 				
@@ -73,7 +73,7 @@ namespace AzureFunctions.SqlBinding
 			{
 				if (tokenProvider != null)
 				{
-					connection.AccessToken = await tokenProvider.GetToken();
+					connection.AccessToken = await tokenProvider.GetToken(cancellationToken);
 				}
 				await connection.OpenAsync(cancellationToken);
 				using (var command = connection.CreateCommand())

@@ -51,3 +51,38 @@ the default name `SqlServerConnectionString` will be used.
 	}
 }
 ```
+
+### Using the Managed Identity
+
+It's also possible to use the Managed Identity of your Function App.  
+To do so, you need to create an implementation of the interface `AzureFunctions.SqlBinding.ISqlBindingTokenProvider` and register it in the service collection.
+
+The implementation can look like the following sample.
+
+```csharp
+[assembly: FunctionsStartup(typeof(Startup))]
+namespace FunctionApp
+{
+	public class Startup : FunctionsStartup
+	{
+		public override void Configure(IFunctionsHostBuilder builder)
+		{
+			builder.Services.AddTransient<ISqlBindingTokenProvider, SqlBindingTokenProvider>();
+		}
+	}
+}
+
+internal class SqlBindingTokenProvider : ISqlBindingTokenProvider
+{
+	public async Task<string> GetToken(CancellationToken cancellationToken)
+	{
+		var azureServiceTokenProvider = new AzureServiceTokenProvider();
+		var accessToken = await azureServiceTokenProvider.GetAccessTokenAsync("https://database.windows.net/", null, cancellationToken);
+		return accessToken;
+	}
+}
+```
+
+If registered, the implementation of the `ISqlBindingTokenProvider` will be retrieved in the binding via the injected `IServiceProvider`. 
+If no implementation has been registered, the functionality for retrieving an access token will be ommitted.
+You can find a sample of the usage in the sample application of this repository.
