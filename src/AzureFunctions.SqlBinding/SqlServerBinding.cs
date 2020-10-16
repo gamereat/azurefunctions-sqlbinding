@@ -14,7 +14,7 @@ namespace AzureFunctions.SqlBinding
 	[Extension(nameof(SqlServerBinding))]
 	public class SqlServerBinding : IExtensionConfigProvider
 	{
-		private ISqlBindingTokenProvider tokenProvider;
+		private readonly ISqlBindingTokenProvider tokenProvider;
 
 		public SqlServerBinding(IServiceProvider services)
 		{
@@ -40,7 +40,7 @@ namespace AzureFunctions.SqlBinding
 				{
 					connection.AccessToken = await tokenProvider.GetToken();
 				}
-				connection.Open();
+				await connection.OpenAsync(cancellationToken);
 				
 				using (var command = connection.CreateCommand())
 				{
@@ -75,7 +75,7 @@ namespace AzureFunctions.SqlBinding
 				{
 					connection.AccessToken = await tokenProvider.GetToken();
 				}
-				connection.Open();
+				await connection.OpenAsync(cancellationToken);
 				using (var command = connection.CreateCommand())
 				{
 					command.Connection = connection;
